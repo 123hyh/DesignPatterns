@@ -1,22 +1,8 @@
+/**
+ * 需要订阅的方法
+ */
 type Handler = (...arg: any[]) => void;
 
-// 深克隆数据
-function clone<T extends Object>(data: T): T {
-  if (Array.isArray(data)) {
-    (<T[]>data) = data.map((item) => {
-      return clone(item);
-    });
-  } else if (Object.prototype.toString.call(data).slice(8, -1) === "Object") {
-    const newData: T = {};
-    for (const key in data) {
-      if (data.hasOwnProperty(key)) {
-        newData[key] = clone(data[key]);
-      }
-    }
-    data = newData;
-  }
-  return data;
-}
 /**
  * 创建 可监听的数据
  * @param this
@@ -26,11 +12,11 @@ function createProxy<T extends any>(this: T, data: any) {
   return new Proxy(data, {
     set: (target, key, value) => {
       // 数组在设置值时会设置多一次下标
-      if (Array.isArray(target) && key === "length" && !!value) return true;
+      if (Array.isArray(target) && key === 'length' && !!value) return true;
 
       const prevData = { [key]: target[key] };
       target[key] = value;
-      if (typeof value === "object") {
+      if (typeof value === 'object') {
         target[key] = createProxy.call(this, value);
       }
       /**
@@ -119,7 +105,7 @@ function ReleaseSubscription() {
 }
 
 const [data, controlCenter] = ReleaseSubscription().Create({
-  name: "hyh",
+  name: 'hyh',
 });
 
 const handler1 = (data: any) => {
