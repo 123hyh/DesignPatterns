@@ -1,6 +1,27 @@
 type Handler = (...arg: any[]) => void;
 
-
+// 深克隆数据
+function clone<T extends Object>(data: T): T {
+  if (Array.isArray(data)) {
+    (<T[]>data) = data.map((item) => {
+      return clone(item);
+    });
+  } else if (Object.prototype.toString.call(data).slice(8, -1) === "Object") {
+    const newData: T = {};
+    for (const key in data) {
+      if (data.hasOwnProperty(key)) {
+        newData[key] = clone(data[key]);
+      }
+    }
+    data = newData;
+  }
+  return data;
+}
+/**
+ * 创建 可监听的数据
+ * @param this
+ * @param data
+ */
 function createProxy<T extends any>(this: T, data: any) {
   return new Proxy(data, {
     set: (target, key, value) => {
@@ -19,6 +40,15 @@ function createProxy<T extends any>(this: T, data: any) {
         this.publish(JSON.parse(JSON.stringify(target)), prevData);
       });
       return true;
+    },
+
+    get(target, key) {
+      // 前缀为下划线的为私有变量，不允许读取
+      if (/^_/.test(<any>key)) {
+        return;
+      }
+
+      return target[key];
     },
   });
 }
